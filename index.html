@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Michael Jackson - Black or White | Premium Player</title>
+    <!-- 引入 Tailwind CSS 與 Google Inter 字體 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome 圖標 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at center, #1e1b4b 0%, #030712 100%);
+        }
+        /* 滾動條樣式 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 999px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+        /* 黑膠唱片旋轉動畫 */
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .spinning {
+            animation: spin 20s linear infinite;
+        }
+        .paused {
+            animation-play-state: paused;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 md:p-8 text-white overflow-x-hidden">
+
+<!-- 主播放器容器 (玻璃擬態) -->
+<div class="relative w-full max-w-4xl bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl p-6 md:p-8 shadow-2xl flex flex-col md:flex-row gap-8 items-center md:items-stretch overflow-hidden">
+    
+    <!-- 背景裝飾微光 -->
+    <div class="absolute -top-24 -left-24 w-48 h-48 bg-blue-500/20 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-24 -right-24 w-48 h-48 bg-purple-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+    <!-- 左半部：唱片、封面、資訊 -->
+    <div class="w-full md:w-1/2 flex flex-col items-center justify-between gap-6">
+        <!-- 頂部標題區 -->
+        <div class="text-center w-full relative z-10">
+            <span class="px-3 py-1 bg-white/10 border border-white/10 text-xs rounded-full font-semibold tracking-wider text-blue-400 uppercase">
+                Now Playing
+            </span>
+            <h1 id="track-title" class="text-2xl md:text-3xl font-extrabold mt-3 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-gray-400">
+                Black or White
+            </h1>
+            <p id="track-artist" class="text-gray-400 text-sm mt-1 font-medium">Michael Jackson — Dangerous (1991)</p>
+            
+            <!-- 載入與偵測狀態顯示器 -->
+            <div id="loader-status" class="mt-2 text-xs text-indigo-300 font-medium animate-pulse flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-spinner animate-spin"></i> 正在連線至音訊源...
+            </div>
+        </div>
+
+        <!-- 3D 旋轉唱片盤面 -->
+        <div class="relative w-64 h-64 md:w-72 md:h-72 flex items-center justify-center group">
+            <!-- 唱片外圈 (黑膠細節) -->
+            <div id="vinyl-record" class="spinning paused w-full h-full rounded-full bg-neutral-950 border-[6px] border-neutral-900 shadow-2xl flex items-center justify-center relative ring-4 ring-white/5">
+                <!-- 黑膠光澤紋路 -->
+                <div class="absolute inset-0 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.15)_0%,rgba(0,0,0,0)_70%)] pointer-events-none"></div>
+                <div class="absolute inset-4 rounded-full border border-dashed border-neutral-800/50"></div>
+                <div class="absolute inset-8 rounded-full border border-dashed border-neutral-800/40"></div>
+                <div class="absolute inset-16 rounded-full border border-dashed border-neutral-800/30"></div>
+                
+                <!-- 唱片中央貼紙 (封面) -->
+                <div class="w-28 h-28 md:w-32 md:h-32 rounded-full overflow-hidden border-4 border-neutral-900 relative">
+                    <img src="https://placehold.co/300x300/1e1b4b/ffffff?text=MJ+Black+Or+White" 
+                         alt="Cover" 
+                         id="cover-img"
+                         class="w-full h-full object-cover"
+                         onerror="this.src='https://placehold.co/300x300/1e1b4b/ffffff?text=Michael+Jackson'">
+                    <!-- 中央軸心孔 -->
+                    <div class="absolute inset-0 m-auto w-6 h-6 bg-neutral-950 rounded-full border-2 border-neutral-800 flex items-center justify-center">
+                        <div class="w-2 h-2 bg-zinc-800 rounded-full"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 唱針 (唱臂效果) -->
+            <div id="tonearm" class="absolute top-0 right-0 w-24 h-24 origin-top-right transition-all duration-700 transform rotate-[15deg] pointer-events-none drop-shadow-lg">
+                <!-- 唱臂線條 SVG -->
+                <svg class="w-full h-full" viewBox="0 0 100 100" fill="none">
+                    <path d="M90,10 L70,30 L65,70 L60,85" stroke="#9ca3af" stroke-width="4" stroke-linecap="round"/>
+                    <circle cx="90" cy="10" r="8" fill="#4b5563"/>
+                    <rect x="53" y="80" width="14" height="10" rx="2" transform="rotate(-15, 60, 85)" fill="#ef4444"/>
+                </svg>
+            </div>
+        </div>
+
+        <!-- 動態音量與播放進度微調區 -->
+        <div class="w-full space-y-4">
+            <!-- 進度條 -->
+            <div>
+                <div class="flex justify-between text-xs text-gray-400 mb-1">
+                    <span id="time-current">0:00</span>
+                    <span id="time-total">0:00</span>
+                </div>
+                <div class="relative h-2 w-full bg-white/10 rounded-full cursor-pointer group" id="progress-container">
+                    <div id="progress-bar" class="absolute top-0 left-0 h-full w-0 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.5)] transition-all duration-75"></div>
+                    <div id="progress-handle" class="absolute -top-1 left-0 w-4 h-4 bg-white rounded-full border-2 border-indigo-500 scale-0 group-hover:scale-125 transition-transform duration-150 shadow-md"></div>
+                </div>
+            </div>
+
+            <!-- 控制列 (主按鈕群) -->
+            <div class="flex items-center justify-between gap-2 px-2">
+                <!-- 播放速度按鈕 -->
+                <button id="btn-speed" class="w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all text-xs font-semibold" title="播放速度">
+                    1.0x
+                </button>
+
+                <!-- 單曲循環 -->
+                <button id="btn-repeat" class="w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all" title="重複播放">
+                    <i class="fa-solid fa-repeat text-sm"></i>
+                </button>
+
+                <!-- 播放/暫停主按鈕 -->
+                <button id="btn-play-pause" class="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-400 hover:to-indigo-400 flex items-center justify-center text-white text-xl shadow-[0_0_20px_rgba(99,102,241,0.4)] hover:shadow-[0_0_25px_rgba(99,102,241,0.6)] transform active:scale-95 transition-all">
+                    <i class="fa-solid fa-play ml-1" id="play-icon"></i>
+                </button>
+
+                <!-- 靜音/音量調節 -->
+                <div class="flex items-center gap-2 group/volume relative">
+                    <button id="btn-mute" class="w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all" title="靜音">
+                        <i class="fa-solid fa-volume-high" id="volume-icon"></i>
+                    </button>
+                    <!-- 滑動音量條 -->
+                    <div class="w-0 overflow-hidden group-hover/volume:w-20 transition-all duration-300 flex items-center">
+                        <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.8" class="w-16 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-blue-500">
+                    </div>
+                </div>
+
+                <!-- 工具控制面板觸發鈕 (齒輪) -->
+                <button id="btn-tools" class="w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all" title="來源設定與工具">
+                    <i class="fa-solid fa-sliders text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 右半部：動態歌詞與視覺化波形 -->
+    <div class="w-full md:w-1/2 flex flex-col justify-between gap-6 border-t md:border-t-0 md:border-l border-white/10 pt-6 md:pt-0 md:pl-8">
+        
+        <!-- 動態歌詞面板 -->
+        <div class="flex-1 flex flex-col overflow-hidden max-h-[250px] md:max-h-none">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-semibold tracking-wider text-gray-400 uppercase flex items-center gap-2">
+                    <i class="fa-solid fa-music text-indigo-400 animate-pulse"></i> 動態歌詞
+                </h3>
+                <span class="text-xs text-gray-500">同步滾動</span>
+            </div>
+            
+            <!-- 歌詞容器 -->
+            <div id="lyrics-container" class="flex-1 overflow-y-auto space-y-4 pr-2 scroll-smooth text-center md:text-left py-4 relative">
+                <div class="text-gray-500 text-sm py-1">正在等待音訊連線...</div>
+            </div>
+        </div>
+
+        <!-- 底部動態波形圖 -->
+        <div class="w-full">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-semibold tracking-wider text-gray-400 uppercase">Visualizer</span>
+                <span id="visualizer-status" class="text-[10px] text-green-400 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-ping"></span> Active
+                </span>
+            </div>
+            <div class="h-16 w-full rounded-2xl bg-neutral-950/50 border border-white/5 overflow-hidden relative">
+                <canvas id="visualizer-canvas" class="w-full h-full"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 來源設定與工具彈窗 (Modal) -->
+<div id="tools-modal" class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
+    <div class="bg-zinc-900 border border-white/10 rounded-3xl p-6 max-w-lg w-full shadow-2xl relative transform scale-95 transition-all duration-300" id="tools-content">
+        <button id="btn-close-tools" class="absolute top-4 right-4 text-gray-400 hover:text-white transition-all text-xl">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <h3 class="text-xl font-bold mb-4 text-blue-400 flex items-center gap-2">
+            <i class="fa-solid fa-sliders"></i> 音訊與播放來源設定
+        </h3>
+        
+        <!-- 自動恢復系統狀態 -->
+        <div class="bg-white/5 rounded-xl p-4 mb-4 border border-white/5 text-xs text-gray-300 space-y-2">
+            <div class="flex justify-between items-center">
+                <span>目前嘗試音訊源：</span>
+                <span id="source-index-badge" class="px-2 py-0.5 bg-indigo-500/30 text-indigo-300 rounded-md font-mono">1/5</span>
+            </div>
+            <div class="overflow-x-auto whitespace-nowrap bg-black/30 p-2 rounded-md font-mono text-[10px] text-gray-400" id="current-url-display">
+                正在初始化...
+            </div>
+        </div>
+
+        <div class="space-y-4 text-sm text-gray-300">
+            <!-- 方案 A：直接拖曳/上傳本機 MP3 檔 -->
+            <div class="border border-indigo-500/20 bg-indigo-500/5 rounded-2xl p-4">
+                <p class="font-semibold text-white mb-2 flex items-center gap-1.5 text-indigo-400">
+                    <i class="fa-solid fa-file-audio"></i> 方案 A：本機上傳 (推薦，100% 播放成功)
+                </p>
+                <p class="text-xs text-gray-400 mb-3">若 GitHub 網路限制或失效，請直接拖放或選取您的 Michael Jackson 歌曲檔案：</p>
+                
+                <div class="flex items-center justify-center w-full">
+                    <label class="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-zinc-700 hover:border-indigo-500 rounded-xl cursor-pointer bg-black/20 hover:bg-black/40 transition-all">
+                        <div class="flex flex-col items-center justify-center pt-3 pb-4">
+                            <i class="fa-solid fa-cloud-arrow-up text-xl text-gray-400 mb-1"></i>
+                            <p class="text-xs text-gray-400">點擊選取 或 拖曳 MP3 檔案至此</p>
+                        </div>
+                        <input type="file" id="local-file-input" accept="audio/*" class="hidden" />
+                    </label>
+                </div>
+            </div>
+
+            <!-- 方案 B：手動貼上自訂網路連結 -->
+            <div class="border border-zinc-800 bg-black/20 rounded-2xl p-4">
+                <p class="font-semibold text-white mb-2 flex items-center gap-1.5 text-blue-400">
+                    <i class="fa-solid fa-link"></i> 方案 B：自訂串流網址
+                </p>
+                <div class="flex gap-2">
+                    <input type="text" id="custom-url-input" placeholder="請輸入 MP3 音訊網址..." class="flex-1 px-3 py-1.5 bg-zinc-800 border border-zinc-700 rounded-lg text-xs text-white focus:outline-none focus:border-blue-500">
+                    <button id="btn-apply-custom-url" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold transition-all">套用</button>
+                </div>
+            </div>
+
+            <!-- 方案 C：播放演示備份音軌 -->
+            <div class="border border-emerald-500/10 bg-emerald-500/5 rounded-2xl p-4 flex items-center justify-between">
+                <div>
+                    <p class="font-semibold text-white flex items-center gap-1.5 text-emerald-400">
+                        <i class="fa-solid fa-circle-play"></i> 方案 C：體驗演示曲目
+                    </p>
+                    <p class="text-xs text-gray-400 mt-1">載入無需跨域的高品質公共音樂</p>
+                </div>
+                <button id="btn-load-demo" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold transition-all">
+                    載入測試
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 錯誤修復指引彈窗 (當所有源都加載失敗時自動彈出) -->
+<div id="error-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-[60] flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
+    <div class="bg-zinc-900 border border-red-500/30 rounded-3xl p-6 max-w-md w-full shadow-2xl relative transform scale-95 transition-all duration-300 text-center">
+        <div class="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <h3 class="text-xl font-bold text-red-400 mb-2">
+            音訊源載入失敗
+        </h3>
+        <p class="text-sm text-gray-300 mb-4 leading-relaxed">
+            我們已嘗試過自動調整與繞過跨網域 CORS 阻擋，但仍然無法取得遠端檔案。這通常是暫時性 GitHub 斷線或您本機的阻擋。
+        </p>
+        
+        <div class="bg-black/30 p-3 rounded-xl text-xs text-left text-gray-400 mb-5 space-y-1">
+            <strong class="text-white block mb-1">💡 最佳解決方案：</strong>
+            <p>1. 本地上傳：點下方「本地上傳 MP3」選擇您的 Black or White 檔案，免受任何網路限制，100% 完美呈現！</p>
+            <p>2. 載入演示：一鍵播放免跨域公共音樂以測試播放器功能。</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+            <button id="btn-error-upload" class="py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-upload"></i> 本地上傳 MP3
+            </button>
+            <button id="btn-error-demo" class="py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-play"></i> 載入測試音軌
+            </button>
+        </div>
+        
+        <!-- 隱藏的本地上傳 inputs -->
+        <input type="file" id="error-file-input" accept="audio/*" class="hidden" />
+
+        <button id="btn-close-error" class="mt-4 text-xs text-gray-500 hover:text-gray-300 underline transition-all">
+            稍後設定
+        </button>
+    </div>
+</div>
+
+<!-- 吐司通知 (Toast) 容器 -->
+<div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 bg-indigo-600 text-white px-5 py-3 rounded-full shadow-lg text-sm font-medium tracking-wide transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-2">
+    <i class="fa-solid fa-circle-check"></i> <span id="toast-text">通知內容</span>
+</div>
+
+<script>
+    // 1. 修復、解碼與拼接正確的 GitHub 原始音訊 URL
+    // 將換行符號與空白整合、並以最可靠的格式編碼
+    const primaryUrl = "https://raw.githubusercontent.com/wht-115/test1/main/Michael%20Jackson%20-%20Black%20or%20White%20%5BRESTORED_REMASTERED%5D%20HD.mp3";
+    
+    // 多重網址備選池 (在遠端不同分支、解析、編碼形式等不同情況下自動切換)
+    const githubCandidates = [
+        primaryUrl,
+        "https://raw.githubusercontent.com/wht-115/test1/master/Michael%20Jackson%20-%20Black%20or%20White%20%5BRESTORED_REMASTERED%5D%20HD.mp3",
+        "https://raw.githubusercontent.com/wht-115/test1/main/Michael%20Jackson%20-%20Black%20or%20White%5BRESTORED_REMASTERED%5D%20HD.mp3",
+        "https://raw.githubusercontent.com/wht-115/test1/master/Michael%20Jackson%20-%20Black%20or%20White%5BRESTORED_REMASTERED%5D%20HD.mp3"
+    ];
+
+    // 備份演示曲目 (Soundhelix 高可靠串流，供無跨域體驗)
+    const demoAudioUrl = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
+
+    let currentCandidateIndex = 0;
+    let isDemoMode = false;
+    let hasAttemptedNoCORS = false; // 是否已對目前網址嘗試過非 CORS 降級載入
+
+    // 建立音訊實體
+    const audio = new Audio();
+    // 預設為 anonymous 以便建立 Web Audio Visualizer 波形
+    audio.crossOrigin = "anonymous"; 
+
+    // DOM 元素選取
+    const btnPlayPause = document.getElementById('btn-play-pause');
+    const playIcon = document.getElementById('play-icon');
+    const vinylRecord = document.getElementById('vinyl-record');
+    const tonearm = document.getElementById('tonearm');
+    const progressBar = document.getElementById('progress-bar');
+    const progressHandle = document.getElementById('progress-handle');
+    const progressContainer = document.getElementById('progress-container');
+    const timeCurrent = document.getElementById('time-current');
+    const timeTotal = document.getElementById('time-total');
+    const btnSpeed = document.getElementById('btn-speed');
+    const btnRepeat = document.getElementById('btn-repeat');
+    const btnMute = document.getElementById('btn-mute');
+    const volumeIcon = document.getElementById('volume-icon');
+    const volumeSlider = document.getElementById('volume-slider');
+    const btnTools = document.getElementById('btn-tools');
+    const toolsModal = document.getElementById('tools-modal');
+    const toolsContent = document.getElementById('tools-content');
+    const btnCloseTools = document.getElementById('btn-close-tools');
+    const errorModal = document.getElementById('error-modal');
+    const btnCloseError = document.getElementById('btn-close-error');
+    
+    const localFileInput = document.getElementById('local-file-input');
+    const errorFileInput = document.getElementById('error-file-input');
+    const customUrlInput = document.getElementById('custom-url-input');
+    const btnApplyCustomUrl = document.getElementById('btn-apply-custom-url');
+    const btnLoadDemo = document.getElementById('btn-load-demo');
+    const btnErrorDemo = document.getElementById('btn-error-demo');
+    const btnErrorUpload = document.getElementById('btn-error-upload');
+    const loaderStatus = document.getElementById('loader-status');
+    const sourceIndexBadge = document.getElementById('source-index-badge');
+    const currentUrlDisplay = document.getElementById('current-url-display');
+    const trackTitle = document.getElementById('track-title');
+    const trackArtist = document.getElementById('track-artist');
+
+    const toast = document.getElementById('toast');
+    const toastText = document.getElementById('toast-text');
+    const lyricsContainer = document.getElementById('lyrics-container');
+    const canvas = document.getElementById('visualizer-canvas');
+    const ctx = canvas.getContext('2d');
+
+    // 狀態變數
+    let isPlaying = false;
+    let isMuted = false;
+    let repeatMode = 'none'; // 'none' | 'one'
+    let speeds = [1.0, 1.25, 1.5, 2.0, 0.75];
+    let speedIndex = 0;
+
+    // 智慧加載音訊模組
+    function loadAudioSource(url) {
+        loaderStatus.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> 正在解析載入音軌...`;
+        loaderStatus.className = "mt-2 text-xs text-indigo-300 font-medium animate-pulse flex items-center justify-center gap-1.5";
+        
+        currentUrlDisplay.innerText = url;
+        if (!isDemoMode && url.includes("github")) {
+            sourceIndexBadge.innerText = `${currentCandidateIndex + 1}/${githubCandidates.length}`;
+        } else if (isDemoMode) {
+            sourceIndexBadge.innerText = "Demo 備用音軌";
+        } else {
+            sourceIndexBadge.innerText = "本機/自訂源";
+        }
+
+        audio.src = url;
+        audio.load();
+    }
+
+    // 當成功載入元數據 (表示格式和網路能讀取此音樂)
+    audio.addEventListener('loadedmetadata', () => {
+        loaderStatus.innerHTML = `<i class="fa-solid fa-circle-check text-green-400"></i> 音訊連結成功`;
+        loaderStatus.className = "mt-2 text-xs text-green-400 font-medium flex items-center justify-center gap-1.5";
+        timeTotal.innerText = formatTime(audio.duration);
+        hasAttemptedNoCORS = false; // 重設跨域嘗試旗標
+    });
+
+    // 核心容錯阻擋機制：音訊加載出錯
+    audio.addEventListener('error', (e) => {
+        console.warn(`音訊加載嘗試出錯。網址：${audio.src}，CORS 設定：${audio.crossOrigin}`);
+
+        // 策略 1：如果目前的 URL 開啟了 CORS (anonymous) 導致載入失敗，嘗試關閉 CORS 後重新載入
+        if (audio.crossOrigin === "anonymous" && !hasAttemptedNoCORS) {
+            hasAttemptedNoCORS = true;
+            console.log("嘗試關閉 CORS 跨域驗證並重新請求此 URL，波形將轉為環境流模式...");
+            showToast("正在嘗試智慧避開跨網域限制...");
+            audio.removeAttribute('crossOrigin'); // 關閉 CORS
+            audio.src = audio.src; // 重設 src
+            audio.load();
+            return;
+        }
+
+        // 策略 2：如果關閉了 CORS 依然失敗，且我們還有其他 GitHub 備選網址變體可以試
+        if (!isDemoMode && currentCandidateIndex < githubCandidates.length - 1) {
+            currentCandidateIndex++;
+            hasAttemptedNoCORS = false;
+            // 重新開啟 CORS 以試探新 URL
+            audio.crossOrigin = "anonymous";
+            showToast(`嘗試備用網址變體 ${currentCandidateIndex + 1}...`);
+            loadAudioSource(githubCandidates[currentCandidateIndex]);
+        } else {
+            // 所有備選都陣亡，切入故障引導模式
+            loaderStatus.innerHTML = `<i class="fa-solid fa-circle-exclamation text-red-400"></i> 音訊連線受阻`;
+            loaderStatus.className = "mt-2 text-xs text-red-400 font-medium flex items-center justify-center gap-1.5";
+            showErrorModal();
+        }
+    });
+
+    // 啟動流程
+    function initPlayerSource() {
+        currentCandidateIndex = 0;
+        isDemoMode = false;
+        hasAttemptedNoCORS = false;
+        audio.crossOrigin = "anonymous";
+        loadAudioSource(githubCandidates[currentCandidateIndex]);
+    }
+
+    // 歌詞資料庫 (配對時間戳以利同步)
+    const lyrics = [
+        { time: 0, text: "🎵 - 音樂前奏 (Michael Jackson - Black or White) -" },
+        { time: 8, text: "Let's play some music now..." },
+        { time: 13, text: "I took my baby on a Saturday bang" },
+        { time: 16, text: "Boy, is that girl with you?" },
+        { time: 18, text: "Yes, we're one and the same" },
+        { time: 20, text: "Now I believe in miracles" },
+        { time: 23, text: "And a miracle has happened tonight" },
+        { time: 27, text: "But, if you're thinkin' about my baby" },
+        { time: 31, text: "It don't matter if you're black or white" },
+        { time: 34, text: "🎵 - 節奏狂飆中 -" },
+        { time: 42, text: "They print my message in the Saturday Sun" },
+        { time: 46, text: "I had to tell them I ain't second to none" },
+        { time: 50, text: "And I told about equality" },
+        { time: 52, text: "An it's true, either you're wrong or you're right" },
+        { time: 56, text: "But, if you're thinkin' about my baby" },
+        { time: 60, text: "It don't matter if you're black or white" },
+        { time: 63, text: "I am tired of this devil" },
+        { time: 66, text: "I am tired of this stuff" },
+        { time: 68, text: "I am tired of this business" },
+        { time: 70, text: "Sew when the going gets rough" },
+        { time: 72, text: "I ain't scared of your brother" },
+        { time: 74, text: "I ain't scared of no sheets" },
+        { time: 76, text: "I ain't scared of nobody" },
+        { time: 78, text: "Girl, when the goin' gets mean..." },
+        { time: 81, text: "🎵 - 吉他 Solo 演奏段落 -" },
+        { time: 96, text: "Protection for gangs, clubs, and nations" },
+        { time: 100, text: "Causing grief in human relations" },
+        { time: 104, text: "It's a turf war on a global scale" },
+        { time: 108, text: "I'd rather hear both sides of the tale" },
+        { time: 111, text: "See, it's not about races, just places, faces" },
+        { time: 115, text: "Where your blood comes from is where your space is" },
+        { time: 119, text: "I've seen the bright get duller" },
+        { time: 121, text: "I'm not going to spend my life being a color!" },
+        { time: 125, text: "Don't tell me you agree with me" },
+        { time: 128, text: "When I saw you kicking dirt in my eye!" },
+        { time: 132, text: "But, if you're thinkin' about my baby" },
+        { time: 136, text: "It don't matter if you're black or white" },
+        { time: 140, text: "It don't matter if you're black or white!" },
+        { time: 144, text: "It's black, it's white, yeah!" },
+        { time: 148, text: "It's tough for you to get by" },
+        { time: 152, text: "It's black, it's white, yeah!" },
+        { time: 156, text: "🎵 - 精彩吉他主弦律與合音結尾 -" },
+        { time: 180, text: "Thank you for listening! 🎵" }
+    ];
+
+    // 渲染歌詞
+    function renderLyrics() {
+        lyricsContainer.innerHTML = '';
+        lyrics.forEach((line) => {
+            const div = document.createElement('div');
+            div.className = 'lyric-line py-2 px-3 text-gray-500 hover:text-white transition-all duration-300 rounded-lg text-sm md:text-base font-medium leading-relaxed cursor-pointer';
+            div.innerText = line.text;
+            div.dataset.time = line.time;
+            div.addEventListener('click', () => {
+                audio.currentTime = line.time;
+                if (!isPlaying) togglePlay();
+            });
+            lyricsContainer.appendChild(div);
+        });
+    }
+    renderLyrics();
+
+    // 高亮歌詞同步
+    function updateLyricsHighlight(currentTime) {
+        const lines = document.querySelectorAll('.lyric-line');
+        let activeIndex = -1;
+
+        for (let i = 0; i < lyrics.length; i++) {
+            if (currentTime >= lyrics[i].time) {
+                activeIndex = i;
+            } else {
+                break;
+            }
+        }
+
+        lines.forEach((line, index) => {
+            if (index === activeIndex) {
+                line.classList.remove('text-gray-500', 'scale-100');
+                line.classList.add('text-indigo-400', 'font-bold', 'scale-105', 'bg-white/5');
+                
+                const containerHeight = lyricsContainer.clientHeight;
+                const lineOffsetTop = line.offsetTop;
+                const lineHeight = line.clientHeight;
+                lyricsContainer.scrollTop = lineOffsetTop - (containerHeight / 2) + (lineHeight / 2);
+            } else {
+                line.classList.remove('text-indigo-400', 'font-bold', 'scale-105', 'bg-white/5');
+                line.classList.add('text-gray-500', 'scale-100');
+            }
+        });
+    }
+
+    // 播放、暫停與進度同步控制
+    function togglePlay() {
+        if (isPlaying) {
+            audio.pause();
+            playIcon.className = 'fa-solid fa-play ml-1';
+            vinylRecord.classList.add('paused');
+            tonearm.style.transform = 'rotate(15deg)';
+            isPlaying = false;
+            showToast("已暫停播放");
+        } else {
+            // 點擊播放時初始化音訊上下文 (Web Audio 安全規範)
+            initAudioContext();
+            audio.play().then(() => {
+                playIcon.className = 'fa-solid fa-pause';
+                vinylRecord.classList.remove('paused');
+                tonearm.style.transform = 'rotate(0deg)';
+                isPlaying = true;
+                showToast(isDemoMode ? "正在播放演示音樂" : "正在播放黑與白經典歌曲");
+            }).catch(err => {
+                console.error("播放嘗試失敗：", err);
+                showToast("嘗試加載/解鎖音樂失敗，已為您彈出方案設定！");
+                showErrorModal();
+            });
+        }
+    }
+
+    btnPlayPause.addEventListener('click', togglePlay);
+
+    // 音樂進度更新
+    audio.addEventListener('timeupdate', () => {
+        const cur = audio.currentTime;
+        const dur = audio.duration || 0;
+        
+        const percent = (cur / dur) * 100;
+        progressBar.style.width = `${percent}%`;
+        progressHandle.style.left = `calc(${percent}% - 8px)`;
+
+        timeCurrent.innerText = formatTime(cur);
+        if (dur) {
+            timeTotal.innerText = formatTime(dur);
+        }
+
+        updateLyricsHighlight(cur);
+    });
+
+    audio.addEventListener('ended', () => {
+        if (repeatMode === 'one') {
+            audio.currentTime = 0;
+            audio.play();
+        } else {
+            isPlaying = false;
+            playIcon.className = 'fa-solid fa-play ml-1';
+            vinylRecord.classList.add('paused');
+            tonearm.style.transform = 'rotate(15deg)';
+            audio.currentTime = 0;
+            showToast("播放完畢");
+        }
+    });
+
+    // 拖曳尋找進度
+    function seekTo(e) {
+        const rect = progressContainer.getBoundingClientRect();
+        const clickX = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
+        const width = rect.width;
+        const seekRatio = Math.max(0, Math.min(1, clickX / width));
+        if (audio.duration) {
+            audio.currentTime = seekRatio * audio.duration;
+        }
+    }
+
+    progressContainer.addEventListener('mousedown', (e) => {
+        seekTo(e);
+        const onMouseMove = (moveEvent) => seekTo(moveEvent);
+        const onMouseUp = () => {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        };
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    });
+
+    // 觸控拖曳
+    progressContainer.addEventListener('touchstart', (e) => {
+        seekTo(e);
+        const onTouchMove = (moveEvent) => seekTo(moveEvent);
+        const onTouchEnd = () => {
+            document.removeEventListener('touchmove', onTouchMove);
+            document.removeEventListener('touchend', onTouchEnd);
+        };
+        document.addEventListener('touchmove', onTouchMove);
+        document.addEventListener('touchend', onTouchEnd);
+    });
+
+    // 循環、播放速度、音量及靜音按鈕
+    btnRepeat.addEventListener('click', () => {
+        if (repeatMode === 'none') {
+            repeatMode = 'one';
+            btnRepeat.classList.remove('text-gray-400');
+            btnRepeat.classList.add('text-indigo-400');
+            showToast("已啟用單曲循環模式");
+        } else {
+            repeatMode = 'none';
+            btnRepeat.classList.remove('text-indigo-400');
+            btnRepeat.classList.add('text-gray-400');
+            showToast("已關閉循環播放");
+        }
+    });
+
+    btnSpeed.addEventListener('click', () => {
+        speedIndex = (speedIndex + 1) % speeds.length;
+        const currentSpeed = speeds[speedIndex];
+        audio.playbackRate = currentSpeed;
+        btnSpeed.innerText = `${currentSpeed.toFixed(2)}x`;
+        showToast(`播放速度調整為 ${currentSpeed}x`);
+    });
+
+    volumeSlider.addEventListener('input', (e) => {
+        const vol = parseFloat(e.target.value);
+        audio.volume = vol;
+        isMuted = vol === 0;
+        updateVolumeIcon(vol);
+    });
+
+    btnMute.addEventListener('click', () => {
+        if (isMuted) {
+            audio.volume = volumeSlider.value = 0.8;
+            isMuted = false;
+            showToast("解除靜音");
+        } else {
+            audio.volume = volumeSlider.value = 0;
+            isMuted = true;
+            showToast("已靜音");
+        }
+        updateVolumeIcon(audio.volume);
+    });
+
+    function updateVolumeIcon(vol) {
+        if (vol === 0) {
+            volumeIcon.className = 'fa-solid fa-volume-xmark text-red-400';
+        } else if (vol < 0.4) {
+            volumeIcon.className = 'fa-solid fa-volume-low';
+        } else {
+            volumeIcon.className = 'fa-solid fa-volume-high';
+        }
+    }
+
+    // 處理本地檔案上傳/拖曳播放與自訂 URL
+    function handleLocalFileSelect(file) {
+        if (!file) return;
+        const objectURL = URL.createObjectURL(file);
+        
+        isDemoMode = false;
+        trackTitle.innerText = file.name.replace(/\.[^/.]+$/, ""); // 去掉副檔名
+        trackArtist.innerText = "本機載入音訊";
+        
+        document.getElementById('cover-img').src = "https://placehold.co/300x300/1e1b4b/ffffff?text=Local+Audio";
+        
+        // 釋放先前建立的 Object URL 節省記憶體
+        if (audio.src && audio.src.startsWith('blob:')) {
+            URL.revokeObjectURL(audio.src);
+        }
+
+        // 本地檔案播放可支援完全的 CORS 頻譜，嘗試重新啟用 anonymous
+        audio.crossOrigin = "anonymous";
+        loadAudioSource(objectURL);
+        closeTools();
+        closeErrorModal();
+        showToast("本機音訊載入成功！請點擊播放。");
+    }
+
+    localFileInput.addEventListener('change', (e) => handleLocalFileSelect(e.target.files[0]));
+    errorFileInput.addEventListener('change', (e) => handleLocalFileSelect(e.target.files[0]));
+
+    btnApplyCustomUrl.addEventListener('click', () => {
+        const url = customUrlInput.value.trim();
+        if (url) {
+            isDemoMode = false;
+            trackTitle.innerText = "自訂串流音樂";
+            trackArtist.innerText = "線上自訂來源";
+            audio.crossOrigin = "anonymous";
+            loadAudioSource(url);
+            closeTools();
+            showToast("正在連接自訂串流網址...");
+        } else {
+            showToast("請輸入有效的網址");
+        }
+    });
+
+    function loadDemoTrack() {
+        isDemoMode = true;
+        trackTitle.innerText = "SoundHelix Demo Track";
+        trackArtist.innerText = "公共免版權測試音訊";
+        audio.crossOrigin = "anonymous";
+        loadAudioSource(demoAudioUrl);
+        closeTools();
+        closeErrorModal();
+        showToast("已切換為備份演示音軌");
+    }
+
+    btnLoadDemo.addEventListener('click', loadDemoTrack);
+    btnErrorDemo.addEventListener('click', loadDemoTrack);
+    btnErrorUpload.addEventListener('click', () => errorFileInput.click());
+
+    // 輔助函式
+    function formatTime(secs) {
+        const minutes = Math.floor(secs / 60);
+        const seconds = Math.floor(secs % 60);
+        return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    }
+
+    let toastTimeout;
+    function showToast(message) {
+        toastText.innerText = message;
+        toast.classList.remove('opacity-0', 'translate-y-20');
+        toast.classList.add('opacity-100', 'translate-y-0');
+        
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => {
+            toast.classList.remove('opacity-100', 'translate-y-0');
+            toast.classList.add('opacity-0', 'translate-y-20');
+        }, 2500);
+    }
+
+    // 視窗開啟與關閉
+    btnTools.addEventListener('click', () => {
+        toolsModal.classList.remove('opacity-0', 'pointer-events-none');
+        toolsContent.classList.remove('scale-95');
+        toolsContent.classList.add('scale-100');
+    });
+
+    function closeTools() {
+        toolsModal.classList.add('opacity-0', 'pointer-events-none');
+        toolsContent.classList.remove('scale-100');
+        toolsContent.classList.add('scale-95');
+    }
+
+    btnCloseTools.addEventListener('click', closeTools);
+    toolsModal.addEventListener('click', (e) => {
+        if (e.target === toolsModal) closeTools();
+    });
+
+    function showErrorModal() {
+        errorModal.classList.remove('opacity-0', 'pointer-events-none');
+        errorModal.querySelector('div').classList.remove('scale-95');
+        errorModal.querySelector('div').classList.add('scale-100');
+    }
+
+    function closeErrorModal() {
+        errorModal.classList.add('opacity-0', 'pointer-events-none');
+        errorModal.querySelector('div').classList.remove('scale-100');
+        errorModal.querySelector('div').classList.add('scale-95');
+    }
+
+    btnCloseError.addEventListener('click', closeErrorModal);
+
+    // Web Audio API 頻譜與 Canvas 動態繪製 (附強大防崩潰保護與自適應繪圖)
+    let audioCtx, analyser, dataArray;
+    let isAudioContextInitialized = false;
+
+    function initAudioContext() {
+        if (isAudioContextInitialized) return;
+        // 如果音訊源因為移除 crossOrigin 而不受 CORS 允許，嘗試連線會拋出跨網域錯誤或靜音。
+        // 此時我們會捕捉例外，安全降級為模擬渲染波形模式，確保絕不當機。
+        if (!audio.crossOrigin) {
+            document.getElementById('visualizer-status').innerHTML = '✨ Ambient Flow Mode';
+            return;
+        }
+
+        try {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioCtx.createAnalyser();
+            const source = audioCtx.createMediaElementSource(audio);
+            source.connect(analyser);
+            analyser.connect(audioCtx.destination);
+            analyser.fftSize = 64; 
+            const bufferLength = analyser.frequencyBinCount;
+            dataArray = new Uint8Array(bufferLength);
+            isAudioContextInitialized = true;
+            document.getElementById('visualizer-status').innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-ping"></span> 🔥 High-Fi Audio Active';
+        } catch (e) {
+            console.log("Web Audio API 被 CORS 限制阻擋或不支援，已切換至模擬氛圍波形模式。", e);
+            document.getElementById('visualizer-status').innerHTML = '✨ Ambient Flow Mode';
+        }
+    }
+
+    function resizeCanvas() {
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = canvas.parentElement.clientHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // 圓角矩形繪圖相容性函式 (防舊瀏覽器報錯)
+    function drawRoundRect(x, y, w, h, r) {
+        if (ctx.roundRect) {
+            ctx.roundRect(x, y, w, h, r);
+        } else {
+            // 降級為常規矩形
+            ctx.rect(x, y, w, h);
+        }
+    }
+
+    function drawVisualizer() {
+        requestAnimationFrame(drawVisualizer);
+        
+        const width = canvas.width;
+        const height = canvas.height;
+        ctx.clearRect(0, 0, width, height);
+
+        const barCount = 20;
+        const barWidth = (width / barCount) - 4;
+        let x = 2;
+
+        // 如果 Web Audio 初始化成功且允許 CORS，且正在播放，繪製真即時頻譜
+        if (isAudioContextInitialized && isPlaying && audio.crossOrigin) {
+            try {
+                analyser.getByteFrequencyData(dataArray);
+                for (let i = 0; i < barCount; i++) {
+                    const percent = dataArray[i % dataArray.length] / 255;
+                    const barHeight = Math.max(6, percent * height * 0.95);
+                    
+                    const grad = ctx.createLinearGradient(0, height, 0, height - barHeight);
+                    grad.addColorStop(0, '#3b82f6');
+                    grad.addColorStop(1, '#a855f7');
+                    
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    drawRoundRect(x, height - barHeight, barWidth, barHeight, 4);
+                    ctx.fill();
+                    
+                    x += barWidth + 4;
+                }
+            } catch (err) {
+                // 如果抓取資料有跨域問題，無縫切換到擬真模式
+                drawFallbackVisualizer(width, height, barCount, barWidth);
+            }
+        } else {
+            drawFallbackVisualizer(width, height, barCount, barWidth);
+        }
+    }
+
+    // 擬真智能頻譜演算 (確保非 CORS 與暫停時也好看)
+    function drawFallbackVisualizer(width, height, barCount, barWidth) {
+        let x = 2;
+        const time = Date.now() * 0.003;
+        for (let i = 0; i < barCount; i++) {
+            let simulatedPercent = 0.1;
+            if (isPlaying) {
+                simulatedPercent = (Math.sin(i * 0.4 + time) * Math.cos(i * 0.2 - time * 0.5) + 1.2) / 2.2;
+                simulatedPercent = Math.pow(simulatedPercent, 1.5) * 0.85;
+            } else {
+                simulatedPercent = 0.08 + Math.sin(i * 0.3 + Date.now() * 0.001) * 0.03;
+            }
+            const barHeight = Math.max(4, simulatedPercent * height);
+            
+            const grad = ctx.createLinearGradient(0, height, 0, height - barHeight);
+            grad.addColorStop(0, '#1d4ed8');
+            grad.addColorStop(0.5, '#6366f1');
+            grad.addColorStop(1, '#a855f7');
+            
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            drawRoundRect(x, height - barHeight, barWidth, barHeight, 4);
+            ctx.fill();
+            
+            x += barWidth + 4;
+        }
+    }
+
+    // 啟動迴圈與載入初始化
+    window.onload = function() {
+        drawVisualizer();
+        initPlayerSource();
+    }
+</script>
+</body>
+</html>
